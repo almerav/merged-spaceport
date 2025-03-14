@@ -21,8 +21,11 @@
     "migration:create": "mikro-orm migration:create",
     "migration:up": "mikro-orm migration:up",
     "migration:down": "mikro-orm migration:down",
+    "migration:pending": "mikro-orm migration:pending",
     "schema:update": "mikro-orm schema:update --run",
     "schema:fresh": "mikro-orm schema:fresh --run",
+    "schema:drop": "mikro-orm schema:drop --run",
+    "db:seed": "mikro-orm seeder:run",
     "db:test-connection": "ts-node src/scripts/test-connection.ts"
   },
   "dependencies": {
@@ -95,6 +98,22 @@
     "configPaths": [
       "./src/config/mikro-orm.config.ts",
       "./dist/config/mikro-orm.config.js"
-    ]
+    ],
+    "entities": [
+      "./dist/**/*.entity.js"
+    ],
+    "entitiesTs": [
+      "./src/**/*.entity.ts"
+    ],
+    "migrations": {
+      "path": "./src/migrations",
+      "pathTs": "./src/migrations",
+      "glob": "!(*.d).{js,ts}"
+    },
+    "seeder": {
+      "path": "./src/seeders",
+      "pathTs": "./src/seeders",
+      "defaultSeeder": "DatabaseSeeder"
+    }
   }
 }

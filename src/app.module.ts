@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from './modules/database/database.module';
-import { UsersModule } from './modules/users/users.module';
+import { UsersModule } from './users/users.module';
+import mikroOrmConfig from './config/mikro-orm.config';
 
 @Module({
   imports: [
@@ -11,7 +12,48 @@ import { UsersModule } from './modules/users/users.module';
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],
     }),
-    DatabaseModule,
+    MikroOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const nodeEnv = configService.get('NODE_ENV', 'development');
+        const isProduction = nodeEnv === 'production';
+        const isTest = nodeEnv === 'test';
+
+        return {
+          ...mikroOrmConfig,
+          clientUrl: configService.get('DATABASE_URL'),
+          host: configService.get('DATABASE_HOST', mikroOrmConfig.host),
+          port: configService.get('DATABASE_PORT', mikroOrmConfig.port),
+          user: configService.get('DATABASE_USER', mikroOrmConfig.user),
+          password: configService.get(
+            'DATABASE_PASSWORD',
+            mikroOrmConfig.password,
+          ),
+          dbName: configService.get(
+            'DATABASE_NAME',
+            isTest ? 'spaceport_test' : 'spaceport',
+          ),
+          autoLoadEntities: true,
+          debug:
+            configService.get('DATABASE_DEBUG') === 'true' && !isProduction,
+
+          // Override migrations path for NestJS integration
+          migrations: {
+            ...mikroOrmConfig.migrations,
+            path: 'dist/migrations',
+            pathTs: 'src/migrations',
+          },
+
+          // Override seeder path for NestJS integration
+          seeder: {
+            ...mikroOrmConfig.seeder,
+            path: 'dist/seeders',
+            pathTs: 'src/seeders',
+          },
+        };
+      },
+    }),
     UsersModule,
   ],
   controllers: [AppController],
