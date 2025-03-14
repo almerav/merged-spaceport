@@ -22,7 +22,8 @@
     "migration:up": "mikro-orm migration:up",
     "migration:down": "mikro-orm migration:down",
     "schema:update": "mikro-orm schema:update --run",
-    "schema:fresh": "mikro-orm schema:fresh --run"
+    "schema:fresh": "mikro-orm schema:fresh --run",
+    "db:test-connection": "ts-node src/scripts/test-connection.ts"
   },
   "dependencies": {
     "@mikro-orm/core": "^6.4.9",

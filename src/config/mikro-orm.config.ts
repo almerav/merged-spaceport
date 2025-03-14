@@ -1,22 +1,34 @@
-import { defineConfig } from '@mikro-orm/core';
+import { defineConfig, Options } from '@mikro-orm/core';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Logger } from '@nestjs/common';
+import * as path from 'path';
 
 const logger = new Logger('MikroORM');
 
-const MikroOrmConfig = defineConfig({
-  type: 'postgresql',
+// Load environment variables
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+
+const MikroOrmConfig: Options<PostgreSqlDriver> = defineConfig({
+  driver: PostgreSqlDriver,
   host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT || '5432', 10),
   user: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   dbName: process.env.DATABASE_NAME || 'spaceport',
+
+  // Entity discovery
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
-  debug: process.env.NODE_ENV !== 'production',
+
+  // Debugging and logging
+  debug: !isProduction,
   logger: logger.log.bind(logger),
+
+  // Migrations configuration
   migrations: {
-    path: 'dist/migrations',
-    pathTs: 'src/migrations',
+    path: path.join(__dirname, '../migrations'),
+    pathTs: path.join(__dirname, '../migrations'),
     glob: '!(*.d).{js,ts}',
     transactional: true,
     disableForeignKeys: true,
@@ -24,18 +36,23 @@ const MikroOrmConfig = defineConfig({
     dropTables: true,
     safe: false,
   },
+
+  // Seeder configuration
   seeder: {
-    path: 'dist/seeders',
-    pathTs: 'src/seeders',
+    path: path.join(__dirname, '../seeders'),
+    pathTs: path.join(__dirname, '../seeders'),
     defaultSeeder: 'DatabaseSeeder',
     glob: '!(*.d).{js,ts}',
   },
+
+  // Connection pool settings
   pool: {
-    min: 2,
-    max: 10,
+    min: isProduction ? 2 : 1,
+    max: isProduction ? 10 : 5,
   },
-  // Automatically create tables based on entities
-  autoLoadEntities: true,
+
+  // Disable strict mode in development for easier debugging
+  strict: isProduction,
 });
 
 export default MikroOrmConfig;
