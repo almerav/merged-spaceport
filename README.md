@@ -98,68 +98,99 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
-## Database Setup
+# Spaceport Backend
 
-This project uses PostgreSQL for data storage. Follow these steps to set up your local database environment:
+## Database Configuration
 
-### Prerequisites
+This project uses MikroORM for database connectivity and ORM functionality. The configuration follows domain-based architecture principles.
 
-- PostgreSQL installed on your machine
-- Node.js and npm installed
+### Environment Variables
 
-### Automatic Setup
+The following environment variables are used for database configuration:
 
-We provide a script to automatically set up your development environment:
-
-```bash
-# Make the script executable if needed
-chmod +x src/scripts/setup-dev-environment.sh
-
-# Run the setup script
-./src/scripts/setup-dev-environment.sh
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=spaceport
+DATABASE_SSL=false
+DATABASE_DEBUG=false
 ```
 
-This script will:
+In production, all these variables are required. In development, default values are provided.
 
-1. Create a `.env` file if it doesn't exist
-2. Set up the PostgreSQL database and user
-3. Install dependencies if needed
-4. Build the project
-5. Run database migrations
-6. Seed the database with sample data
+### MikroORM Configuration
 
-### Manual Setup
+The MikroORM configuration is located in `src/config/mikro-orm.config.ts`. It provides:
 
-If you prefer to set up the database manually:
+- Environment-specific settings (development, test, production)
+- Connection pooling with appropriate settings for each environment
+- Retry mechanisms for connection failures
+- Robust error handling
 
-1. Install PostgreSQL if not already installed
-2. Create a database named `spaceport`
-3. Create a dedicated user with appropriate permissions
-4. Copy `.env.example` to `.env` and update the database connection details
-5. Install dependencies: `npm install`
-6. Run migrations: `npm run migration:up`
-7. Seed the database: `npx mikro-orm seeder:run`
+### Domain-Based Structure
 
-### Database Commands
+The application follows a domain-based architecture:
+
+- Each domain (e.g., users, auth) is a separate module directly under `src/`
+- No nested modules directory is used, keeping the structure flat and clean
+- Each domain handles its own entities using `MikroOrmModule.forFeature()`
+- No separate database module is used; MikroORM is integrated directly in the app module
+
+### Database CLI Commands
+
+The following CLI commands are available for database management:
 
 ```bash
-# Create a new migration
-npm run migration:create
-
-# Run migrations
+# Migrations
+npm run migration:create -- --name=MigrationName
 npm run migration:up
-
-# Rollback migrations
 npm run migration:down
+npm run migration:pending
 
-# Update database schema based on entities
+# Schema management
 npm run schema:update
-
-# Drop all tables and recreate schema
 npm run schema:fresh
+npm run schema:drop
 
-# Test database connection
+# Seeding
+npm run db:seed
+
+# Test connection
 npm run db:test-connection
 ```
 
-For more detailed information about the database configuration, see [DATABASE.md](DATABASE.md).
+### Error Handling
+
+The application includes a custom exception filter for database-related errors:
+
+- `DatabaseExceptionFilter` handles various database errors
+- Provides appropriate HTTP responses for different error types
+- Includes detailed logging for troubleshooting
+
+## Development
+
+### Running the Application
+
+```bash
+# Development
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
+```
+
+### Testing Database Connection
+
+```bash
+npm run db:test-connection
+```
+
+This script provides detailed information about the database connection, including:
+
+- Connection parameters
+- PostgreSQL version
+- Connection pool information
+- Database size
