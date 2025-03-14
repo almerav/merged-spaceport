@@ -97,3 +97,69 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Database Setup
+
+This project uses PostgreSQL for data storage. Follow these steps to set up your local database environment:
+
+### Prerequisites
+
+- PostgreSQL installed on your machine
+- Node.js and npm installed
+
+### Automatic Setup
+
+We provide a script to automatically set up your development environment:
+
+```bash
+# Make the script executable if needed
+chmod +x src/scripts/setup-dev-environment.sh
+
+# Run the setup script
+./src/scripts/setup-dev-environment.sh
+```
+
+This script will:
+
+1. Create a `.env` file if it doesn't exist
+2. Set up the PostgreSQL database and user
+3. Install dependencies if needed
+4. Build the project
+5. Run database migrations
+6. Seed the database with sample data
+
+### Manual Setup
+
+If you prefer to set up the database manually:
+
+1. Install PostgreSQL if not already installed
+2. Create a database named `spaceport`
+3. Create a dedicated user with appropriate permissions
+4. Copy `.env.example` to `.env` and update the database connection details
+5. Install dependencies: `npm install`
+6. Run migrations: `npm run migration:up`
+7. Seed the database: `npx mikro-orm seeder:run`
+
+### Database Commands
+
+```bash
+# Create a new migration
+npm run migration:create
+
+# Run migrations
+npm run migration:up
+
+# Rollback migrations
+npm run migration:down
+
+# Update database schema based on entities
+npm run schema:update
+
+# Drop all tables and recreate schema
+npm run schema:fresh
+
+# Test database connection
+npm run db:test-connection
+```
+
+For more detailed information about the database configuration, see [DATABASE.md](DATABASE.md).
