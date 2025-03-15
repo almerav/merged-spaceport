@@ -26,7 +26,8 @@
     "schema:fresh": "mikro-orm schema:fresh --run",
     "schema:drop": "mikro-orm schema:drop --run",
     "db:seed": "mikro-orm seeder:run",
-    "db:test-connection": "ts-node src/scripts/test-connection.ts"
+    "db:test-connection": "ts-node src/scripts/test-connection.ts",
+    "db:verify-setup": "ts-node src/scripts/verify-database-setup.ts"
   },
   "dependencies": {
     "@mikro-orm/core": "^6.4.9",
