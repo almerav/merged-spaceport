@@ -1,11 +1,8 @@
-import { Entity, PrimaryKey, Property, Unique } from '@mikro-orm/core';
-import { v4 as uuid } from 'uuid';
+import { Entity, Property, Unique } from '@mikro-orm/core';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity({ tableName: 'users' })
-export class User {
-  @PrimaryKey()
-  id: string = uuid();
-
+export class User extends BaseEntity {
   @Property()
   @Unique()
   email: string;
@@ -21,16 +18,4 @@ export class User {
 
   @Property({ nullable: true })
   avatar?: string;
-
-  @Property()
-  createdAt: Date = new Date();
-
-  @Property({ onUpdate: () => new Date() })
-  updatedAt: Date = new Date();
-
-  @Property({ nullable: true })
-  deletedAt?: Date;
-
-  @Property({ default: false })
-  isDeleted: boolean = false;
 }

@@ -4,6 +4,10 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { TagsModule } from './tags/tags.module';
+import { TargetsModule } from './targets/targets.module';
+import { PerformanceModule } from './performance/performance.module';
 import mikroOrmConfig from './config/mikro-orm.config';
 
 @Module({
@@ -55,6 +59,10 @@ import mikroOrmConfig from './config/mikro-orm.config';
       },
     }),
     UsersModule,
+    CampaignsModule,
+    TagsModule,
+    TargetsModule,
+    PerformanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
