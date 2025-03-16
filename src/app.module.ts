@@ -8,6 +8,7 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { TagsModule } from './tags/tags.module';
 import { TargetsModule } from './targets/targets.module';
 import { PerformanceModule } from './performance/performance.module';
+import { MigrationModule } from './common/services/migration.module';
 import mikroOrmConfig from './config/mikro-orm.config';
 
 @Module({
@@ -63,6 +64,7 @@ import mikroOrmConfig from './config/mikro-orm.config';
     TagsModule,
     TargetsModule,
     PerformanceModule,
+    MigrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
