@@ -1,10 +1,15 @@
 import { EntityManager } from '@mikro-orm/core';
-import { Seeder } from '@mikro-orm/seeder';
-import { User } from '../modules/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { BaseSeeder } from './BaseSeeder';
 
-export class UserSeeder extends Seeder {
+export class UserSeeder extends BaseSeeder {
   async run(em: EntityManager): Promise<void> {
+    // Prevent running in production
+    this.checkEnvironment();
+
+    this.logStart('User');
+
     const users = [
       {
         email: 'admin@spaceport.com',
@@ -63,10 +68,53 @@ export class UserSeeder extends Seeder {
         password: await bcrypt.hash('opspass123', 10),
         avatar: 'https://randomuser.me/api/portraits/women/8.jpg',
       },
+      // Additional diverse user accounts
+      {
+        email: 'marketing@spaceport.com',
+        firstName: 'Marketing',
+        lastName: 'Specialist',
+        password: await bcrypt.hash('marketpass', 10),
+        avatar: 'https://randomuser.me/api/portraits/women/9.jpg',
+      },
+      {
+        email: 'sales@spaceport.com',
+        firstName: 'Sales',
+        lastName: 'Representative',
+        password: await bcrypt.hash('salespass', 10),
+        avatar: 'https://randomuser.me/api/portraits/men/10.jpg',
+      },
+      {
+        email: 'support@spaceport.com',
+        firstName: 'Customer',
+        lastName: 'Support',
+        password: await bcrypt.hash('supportpass', 10),
+        avatar: 'https://randomuser.me/api/portraits/women/11.jpg',
+      },
+      {
+        email: 'finance@spaceport.com',
+        firstName: 'Finance',
+        lastName: 'Analyst',
+        password: await bcrypt.hash('financepass', 10),
+        avatar: 'https://randomuser.me/api/portraits/men/12.jpg',
+      },
     ];
 
+    let createdCount = 0;
+
     for (const userData of users) {
-      em.create(User, userData);
+      // Check if user already exists to make seeder idempotent
+      const exists = await this.exists(em, User, { email: userData.email });
+
+      if (!exists) {
+        em.create(User, userData);
+        createdCount++;
+      } else {
+        this.logger.verbose(
+          `User with email ${userData.email} already exists, skipping`,
+        );
+      }
     }
+
+    this.logComplete('User', createdCount);
   }
 }

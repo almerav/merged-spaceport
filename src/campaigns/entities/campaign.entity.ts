@@ -9,6 +9,8 @@ import {
 } from '@mikro-orm/core';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
+import { CampaignContent } from './campaign-content.entity';
+import { Tag } from '../../tags/entities/tag.entity';
 
 export enum CampaignStatus {
   DRAFT = 'draft',
