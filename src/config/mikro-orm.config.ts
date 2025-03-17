@@ -6,9 +6,38 @@ import * as path from 'path';
 const logger = new Logger('MikroORM');
 
 /**
- * Validates required environment variables in production
+ * Environment detection with more granular environment types
+ */
+export enum Environment {
+  DEVELOPMENT = 'development',
+  TEST = 'test',
+  STAGING = 'staging',
+  PRODUCTION = 'production',
+}
+
+/**
+ * Get the current environment with enhanced detection
+ */
+export const getEnvironment = (): Environment => {
+  const nodeEnv = process.env.NODE_ENV || Environment.DEVELOPMENT;
+
+  switch (nodeEnv.toLowerCase()) {
+    case Environment.PRODUCTION:
+      return Environment.PRODUCTION;
+    case Environment.STAGING:
+      return Environment.STAGING;
+    case Environment.TEST:
+      return Environment.TEST;
+    default:
+      return Environment.DEVELOPMENT;
+  }
+};
+
+/**
+ * Validates required environment variables based on environment
  */
 const validateEnvVariables = () => {
+  const environment = getEnvironment();
   const requiredVars = [
     'DATABASE_HOST',
     'DATABASE_PORT',
@@ -17,10 +46,11 @@ const validateEnvVariables = () => {
     'DATABASE_NAME',
   ];
 
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  const isProduction = nodeEnv === 'production';
-
-  if (isProduction) {
+  // Only enforce in production and staging environments
+  if (
+    environment === Environment.PRODUCTION ||
+    environment === Environment.STAGING
+  ) {
     const missingVars = requiredVars.filter((varName) => !process.env[varName]);
 
     if (missingVars.length > 0) {
@@ -34,10 +64,93 @@ const validateEnvVariables = () => {
 // Validate environment variables
 validateEnvVariables();
 
-// Load environment variables
-const nodeEnv = process.env.NODE_ENV || 'development';
-const isProduction = nodeEnv === 'production';
-const isTest = nodeEnv === 'test';
+// Get current environment
+const environment = getEnvironment();
+const isProduction = environment === Environment.PRODUCTION;
+const isStaging = environment === Environment.STAGING;
+const isTest = environment === Environment.TEST;
+
+/**
+ * Get environment-specific connection pool settings
+ */
+const getConnectionPoolSettings = () => {
+  switch (environment) {
+    case Environment.PRODUCTION:
+      return {
+        min: parseInt(process.env.DATABASE_POOL_MIN || '5', 10),
+        max: parseInt(process.env.DATABASE_POOL_MAX || '20', 10),
+        idleTimeoutMillis: parseInt(
+          process.env.DATABASE_POOL_IDLE_TIMEOUT || '30000',
+          10,
+        ),
+        acquireTimeoutMillis: parseInt(
+          process.env.DATABASE_POOL_ACQUIRE_TIMEOUT || '20000',
+          10,
+        ),
+      };
+    case Environment.STAGING:
+      return {
+        min: 3,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        acquireTimeoutMillis: 20000,
+      };
+    case Environment.TEST:
+      return {
+        min: 1,
+        max: 3,
+        idleTimeoutMillis: 5000,
+        acquireTimeoutMillis: 5000,
+      };
+    default: // Development
+      return {
+        min: 1,
+        max: 5,
+        idleTimeoutMillis: 10000,
+        acquireTimeoutMillis: 10000,
+      };
+  }
+};
+
+/**
+ * Get environment-specific driver options
+ */
+const getDriverOptions = () => {
+  // Base options for all environments
+  const baseOptions = {
+    connection: {
+      application_name: 'spaceport-api',
+      keepAlive: true,
+    },
+  };
+
+  // Production and staging use SSL if configured
+  if (isProduction || isStaging) {
+    return {
+      connection: {
+        ...baseOptions.connection,
+        ssl:
+          process.env.DATABASE_SSL === 'true'
+            ? {
+                rejectUnauthorized:
+                  process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false',
+              }
+            : false,
+        // Additional production-specific settings
+        statement_timeout: parseInt(
+          process.env.DATABASE_STATEMENT_TIMEOUT || '30000',
+          10,
+        ),
+        query_timeout: parseInt(
+          process.env.DATABASE_QUERY_TIMEOUT || '30000',
+          10,
+        ),
+      },
+    };
+  }
+
+  return baseOptions;
+};
 
 /**
  * MikroORM Configuration
@@ -57,7 +170,7 @@ const MikroOrmConfig: Options<PostgreSqlDriver> = defineConfig({
 
   // Debugging and logging
   debug: !isProduction && process.env.DATABASE_DEBUG === 'true',
-  logger: logger.log.bind(logger),
+  logger: (message) => logger.log(message),
 
   // Migrations configuration
   migrations: {
@@ -79,37 +192,69 @@ const MikroOrmConfig: Options<PostgreSqlDriver> = defineConfig({
     glob: '!(*.d).{js,ts}',
   },
 
-  // Connection pool settings - environment-specific
-  pool: {
-    min: isProduction ? 2 : 1,
-    max: isProduction ? 10 : 5,
-    idleTimeoutMillis: isProduction ? 30000 : 10000,
-    acquireTimeoutMillis: isProduction ? 20000 : 10000,
-  },
-
-  // Retry logic is handled in the application bootstrap
-  // instead of here due to MikroORM limitations
+  // Enhanced connection pool settings - environment-specific
+  pool: getConnectionPoolSettings(),
 
   // Disable strict mode in development for easier debugging
-  strict: isProduction,
+  strict: isProduction || isStaging,
 
   // Additional environment-specific settings
   allowGlobalContext: !isProduction,
   forceUtcTimezone: true,
 
-  // Optimized for production
-  driverOptions: isProduction
-    ? {
-        connection: {
-          ssl:
-            process.env.DATABASE_SSL === 'true'
-              ? { rejectUnauthorized: false }
-              : false,
-          application_name: 'spaceport-api',
-          keepAlive: true,
-        },
-      }
-    : undefined,
+  // Optimized driver options for each environment
+  driverOptions: getDriverOptions(),
+
+  // Query timeout settings
+  findOneOrFailHandler: (entityName) => {
+    return new Error(`Entity ${entityName} not found`);
+  },
 });
 
 export default MikroOrmConfig;
+
+/**
+ * Helper function to configure event listeners for database connection monitoring
+ * This should be called after MikroORM is initialized in the application
+ * @param orm The MikroORM instance
+ */
+export const configureDatabaseEventListeners = (orm: any): void => {
+  const eventManager = orm.em.getEventManager();
+
+  // Connection lifecycle events
+  eventManager.addEventListener('connection.connected', () => {
+    logger.log('Database connection established');
+  });
+
+  eventManager.addEventListener('connection.failed', (error: Error) => {
+    logger.error('Database connection failed', error);
+  });
+
+  eventManager.addEventListener('connection.closed', () => {
+    logger.log('Database connection closed');
+  });
+
+  // Query monitoring events
+  if (!isProduction) {
+    eventManager.addEventListener('query', (event: any) => {
+      if (process.env.DATABASE_LOG_QUERIES === 'true') {
+        logger.debug(`Query executed: ${event.query} [took ${event.took}ms]`);
+      }
+    });
+
+    eventManager.addEventListener('query.error', (event: any) => {
+      logger.error(`Query error: ${event.error} in query: ${event.query}`);
+    });
+  }
+};
+
+/**
+ * Retry configuration for database connection
+ * These values are used in the application bootstrap process
+ */
+export const getConnectionRetryConfig = () => {
+  return {
+    maxRetries: isProduction ? 5 : 3,
+    retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY || '2000', 10), // 2 seconds
+  };
+};

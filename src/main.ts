@@ -1,17 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { MikroORM } from '@mikro-orm/core';
 import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
+import { DatabaseService } from './common/services/database.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  try {
-    const app = await NestFactory.create(AppModule);
+  let app;
 
-    // Get the MikroORM instance
-    const orm = app.get(MikroORM);
-    const em = orm.em.fork();
+  try {
+    // Create NestJS application
+    app = await NestFactory.create(AppModule);
+
+    // Get the database service
+    const databaseService = app.get(DatabaseService);
+    const em = databaseService.getOrmInstance().em.fork();
 
     // Apply global filters and pipes
     app.useGlobalFilters(new DatabaseExceptionFilter(em));
@@ -23,39 +26,15 @@ async function bootstrap() {
       }),
     );
 
-    // Verify database connection with retry logic
-    let isConnected = false;
-    let retries = 0;
-    const maxRetries = process.env.NODE_ENV === 'production' ? 5 : 3;
-    const retryDelay = 2000; // 2 seconds
-
-    while (!isConnected && retries < maxRetries) {
-      try {
-        await orm.em.getConnection().execute('SELECT 1');
-        isConnected = true;
-        logger.log('Database connection established successfully');
-      } catch (error) {
-        retries++;
-        if (retries >= maxRetries) {
-          logger.error(
-            `Failed to connect to the database after ${maxRetries} attempts`,
-            error,
-          );
-          throw error;
-        }
-        logger.warn(
-          `Failed to connect to the database. Retrying (${retries}/${maxRetries})...`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-    }
-
     // Enable CORS
     app.enableCors({
       origin: process.env.CORS_ORIGIN || '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true,
     });
+
+    // Setup graceful shutdown
+    setupGracefulShutdown(app, databaseService, logger);
 
     const port = process.env.PORT ?? 3000;
     await app.listen(port);
@@ -65,4 +44,36 @@ async function bootstrap() {
     process.exit(1);
   }
 }
+
+/**
+ * Setup graceful shutdown handlers
+ * @param app NestJS application instance
+ * @param databaseService Database service instance
+ * @param logger Logger instance
+ */
+function setupGracefulShutdown(app, databaseService, logger) {
+  const shutdown = async (signal) => {
+    logger.log(`Received ${signal} signal. Starting graceful shutdown...`);
+
+    try {
+      // First close the HTTP server to stop accepting new connections
+      await app.close();
+      logger.log('HTTP server closed successfully');
+
+      // Database connections are automatically closed by NestJS lifecycle hooks
+      // through the DatabaseService.onModuleDestroy method
+
+      logger.log('Graceful shutdown completed');
+      process.exit(0);
+    } catch (error) {
+      logger.error('Error during graceful shutdown', error);
+      process.exit(1);
+    }
+  };
+
+  // Listen for termination signals
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
 bootstrap();
