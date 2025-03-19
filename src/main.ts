@@ -4,6 +4,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
 import { DatabaseService } from './common/services/database.service';
 
+//Sentry
+import './sentry/instrument';
+import { AllExceptionsFilter } from './sentry/global.filter';
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   let app;
@@ -17,7 +21,10 @@ async function bootstrap() {
     const em = databaseService.getOrmInstance().em.fork();
 
     // Apply global filters and pipes
-    app.useGlobalFilters(new DatabaseExceptionFilter(em));
+    app.useGlobalFilters(
+      new DatabaseExceptionFilter(em),
+      new AllExceptionsFilter(),
+    );
     app.useGlobalPipes(
       new ValidationPipe({
         transform: true,

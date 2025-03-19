@@ -14,6 +14,8 @@ import { HealthModule } from './health/health.module';
 import mikroOrmConfig from './config/mikro-orm.config';
 import { AuthModule } from './auth/auth.module';
 
+import { SentryModule } from '@sentry/nestjs/setup';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +33,8 @@ import { AuthModule } from './auth/auth.module';
     MigrationModule,
     UsersModule,
     AuthModule,
+
+    SentryModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],
