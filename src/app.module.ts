@@ -12,6 +12,7 @@ import { MigrationModule } from './common/services/migration.module';
 import { DatabaseModule } from './common/services/database.module';
 import { HealthModule } from './health/health.module';
 import mikroOrmConfig from './config/mikro-orm.config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import mikroOrmConfig from './config/mikro-orm.config';
     TargetsModule,
     PerformanceModule,
     MigrationModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

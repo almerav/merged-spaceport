@@ -1,21 +1,41 @@
-import { Entity, Property, Unique } from '@mikro-orm/core';
-import { BaseEntity } from '../../common/entities/base.entity';
+import {
+  Entity,
+  Property,
+  PrimaryKey,
+  Unique,
+  BeforeCreate,
+} from '@mikro-orm/core';
+import { hash } from 'bcrypt';
 
 @Entity({ tableName: 'users' })
-export class User extends BaseEntity {
+export class User {
+  @PrimaryKey()
+  id!: number;
+
   @Property()
   @Unique()
-  email: string;
+  email!: string;
 
   @Property()
-  firstName: string;
+  firstName!: string;
 
   @Property()
-  lastName: string;
+  lastName!: string;
 
   @Property({ hidden: true })
-  password: string;
+  password!: string;
+
+  @Property({ default: 'user' })
+  role!: string;
 
   @Property({ nullable: true })
   avatar?: string;
+
+  @Property({ onCreate: () => new Date() })
+  createdAt!: Date;
+
+  @BeforeCreate()
+  async hashPassword() {
+    this.password = await hash(this.password, 10);
+  }
 }
