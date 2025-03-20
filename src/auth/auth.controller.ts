@@ -1,45 +1,25 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthPayloadDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalGuard } from './guards/local.guard';
+import { Request } from 'express';
+import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private usersService: UsersService,
-  ) {}
-
-  @Post('signup')
-  async signup(@Body() body: { email: string; password: string }) {
-    const existingUser = await this.usersService.findByEmail(body.email);
-    if (existingUser) {
-      throw new BadRequestException('User already exists');
-    }
-
-    const user = await this.usersService.createUser(body.email, body.password);
-    return { message: 'User created successfully', userId: user.id };
-  }
+  constructor(private authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
-    const user = await this.authService.validateUser(body.email, body.password);
-    if (!user) {
-      throw new BadRequestException('Invalid email or password');
-    }
-    return this.authService.login(user);
+  @UseGuards(LocalGuard)
+  login(@Req() req: Request) {
+    return req.user;
   }
 
+  @Get('status')
   @UseGuards(JwtAuthGuard)
-  @Post('validate-token')
-  async validateToken(@Request() req) {
-    return req.user; // Returns the decoded JWT payload
+  status(@Req() req: Request) {
+    console.log('Inside AuthController status method');
+    console.log(req.user);
+    return req.user;
   }
 }
