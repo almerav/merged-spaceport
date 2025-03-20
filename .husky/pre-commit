@@ -1,0 +1,33 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Check if there are entity changes that need migrations
+echo "🔍 Checking for entity changes that need migrations..."
+npm run migration:check
+
+# If there are pending migrations, prompt the user to generate them
+if [ $? -ne 0 ]; then
+  echo "⚠️ Entity changes detected that require migrations!"
+  echo "Would you like to generate a migration now? (y/n)"
+  read -r response
+  
+  if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+    echo "Generating migration..."
+    npm run migration:generate
+    
+    # Add the generated migration file to git
+    git add src/migrations/
+    
+    echo "✅ Migration generated and added to git"
+  else
+    echo "⚠️ You have entity changes without corresponding migrations."
+    echo "Please run 'npm run migration:generate' before committing."
+    exit 1
+  fi
+fi
+
+# Run linting
+npm run lint
+
+# Run tests
+npm run test 

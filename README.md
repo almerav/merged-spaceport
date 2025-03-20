@@ -97,3 +97,100 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# Spaceport Backend
+
+## Database Configuration
+
+This project uses MikroORM for database connectivity and ORM functionality. The configuration follows domain-based architecture principles.
+
+### Environment Variables
+
+The following environment variables are used for database configuration:
+
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=spaceport
+DATABASE_SSL=false
+DATABASE_DEBUG=false
+```
+
+In production, all these variables are required. In development, default values are provided.
+
+### MikroORM Configuration
+
+The MikroORM configuration is located in `src/config/mikro-orm.config.ts`. It provides:
+
+- Environment-specific settings (development, test, production)
+- Connection pooling with appropriate settings for each environment
+- Retry mechanisms for connection failures
+- Robust error handling
+
+### Domain-Based Structure
+
+The application follows a domain-based architecture:
+
+- Each domain (e.g., users, auth) is a separate module directly under `src/`
+- No nested modules directory is used, keeping the structure flat and clean
+- Each domain handles its own entities using `MikroOrmModule.forFeature()`
+- No separate database module is used; MikroORM is integrated directly in the app module
+
+### Database CLI Commands
+
+The following CLI commands are available for database management:
+
+```bash
+# Migrations
+npm run migration:create -- --name=MigrationName
+npm run migration:up
+npm run migration:down
+npm run migration:pending
+
+# Schema management
+npm run schema:update
+npm run schema:fresh
+npm run schema:drop
+
+# Seeding
+npm run db:seed
+
+# Test connection
+npm run db:test-connection
+```
+
+### Error Handling
+
+The application includes a custom exception filter for database-related errors:
+
+- `DatabaseExceptionFilter` handles various database errors
+- Provides appropriate HTTP responses for different error types
+- Includes detailed logging for troubleshooting
+
+## Development
+
+### Running the Application
+
+```bash
+# Development
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
+```
+
+### Testing Database Connection
+
+```bash
+npm run db:test-connection
+```
+
+This script provides detailed information about the database connection, including:
+
+- Connection parameters
+- PostgreSQL version
+- Connection pool information
+- Database size
