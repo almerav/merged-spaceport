@@ -2,6 +2,7 @@ import { defineConfig, Options } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Logger } from '@nestjs/common';
 import * as path from 'path';
+import { EventArgs } from '@mikro-orm/core';
 
 const logger = new Logger('MikroORM');
 
@@ -219,33 +220,39 @@ export default MikroOrmConfig;
  * @param orm The MikroORM instance
  */
 export const configureDatabaseEventListeners = (orm: any): void => {
-  const eventManager = orm.em.getEventManager();
-
-  // Connection lifecycle events
-  eventManager.addEventListener('connection.connected', () => {
-    logger.log('Database connection established');
-  });
-
-  eventManager.addEventListener('connection.failed', (error: Error) => {
-    logger.error('Database connection failed', error);
-  });
-
-  eventManager.addEventListener('connection.closed', () => {
-    logger.log('Database connection closed');
-  });
-
-  // Query monitoring events
-  if (!isProduction) {
-    eventManager.addEventListener('query', (event: any) => {
-      if (process.env.DATABASE_LOG_QUERIES === 'true') {
-        logger.debug(`Query executed: ${event.query} [took ${event.took}ms]`);
-      }
-    });
-
-    eventManager.addEventListener('query.error', (event: any) => {
-      logger.error(`Query error: ${event.error} in query: ${event.query}`);
-    });
-  }
+  // Register event handlers directly in the ORM config
+  orm.config.set('subscribers', [
+    {
+      getSubscribedEvents() {
+        return [
+          'connection.connected',
+          'connection.failed',
+          'connection.closed',
+          'query',
+          'query.error',
+        ];
+      },
+      'connection.connected'() {
+        logger.log('Database connection established');
+      },
+      'connection.failed'(error: Error) {
+        logger.error('Database connection failed', error);
+      },
+      'connection.closed'() {
+        logger.log('Database connection closed');
+      },
+      query(event: any) {
+        if (!isProduction && process.env.DATABASE_LOG_QUERIES === 'true') {
+          logger.debug(`Query executed: ${event.query} [took ${event.took}ms]`);
+        }
+      },
+      'query.error'(event: any) {
+        if (!isProduction) {
+          logger.error(`Query error: ${event.error} in query: ${event.query}`);
+        }
+      },
+    },
+  ]);
 };
 
 /**
