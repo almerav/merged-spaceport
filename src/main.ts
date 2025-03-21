@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
-import { DatabaseService } from './common/services/database.service';
+import { MikroORM } from '@mikro-orm/core';
+import { configureDatabaseEventListeners } from './config/mikro-orm.config';
 
 //Sentry
 import './sentry/instrument';
@@ -16,9 +17,12 @@ async function bootstrap() {
     // Create NestJS application
     app = await NestFactory.create(AppModule);
 
-    // Get the database service
-    const databaseService = app.get(DatabaseService);
-    const em = databaseService.getOrmInstance().em.fork();
+    // Get the MikroORM instance directly
+    const orm = app.get(MikroORM);
+    const em = orm.em.fork();
+
+    // Configure database event listeners
+    configureDatabaseEventListeners(orm);
 
     // Apply global filters and pipes
     app.useGlobalFilters(
@@ -41,7 +45,7 @@ async function bootstrap() {
     });
 
     // Setup graceful shutdown
-    setupGracefulShutdown(app, databaseService, logger);
+    setupGracefulShutdown(app, orm, logger);
 
     const port = process.env.PORT ?? 4000;
     await app.listen(port);
@@ -55,10 +59,10 @@ async function bootstrap() {
 /**
  * Setup graceful shutdown handlers
  * @param app NestJS application instance
- * @param databaseService Database service instance
+ * @param orm MikroORM instance
  * @param logger Logger instance
  */
-function setupGracefulShutdown(app, databaseService, logger) {
+function setupGracefulShutdown(app, orm, logger) {
   const shutdown = async (signal) => {
     logger.log(`Received ${signal} signal. Starting graceful shutdown...`);
 
@@ -67,8 +71,9 @@ function setupGracefulShutdown(app, databaseService, logger) {
       await app.close();
       logger.log('HTTP server closed successfully');
 
-      // Database connections are automatically closed by NestJS lifecycle hooks
-      // through the DatabaseService.onModuleDestroy method
+      // Close database connections
+      await orm.close();
+      logger.log('Database connections closed successfully');
 
       logger.log('Graceful shutdown completed');
       process.exit(0);

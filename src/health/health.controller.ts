@@ -1,13 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { DatabaseService } from '../common/services/database.service';
+import { HealthService } from './health.service';
 
 @Controller('health')
 export class HealthController {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly healthService: HealthService) {}
 
   @Get()
   async check() {
-    const dbHealth = await this.databaseService.healthCheck();
+    const dbHealth = await this.healthService.checkDatabase();
 
     return {
       status: dbHealth ? 'ok' : 'error',
@@ -22,10 +22,8 @@ export class HealthController {
 
   @Get('database')
   async databaseHealth() {
-    const dbHealth = await this.databaseService.healthCheck();
-    const stats = dbHealth
-      ? await this.databaseService.getConnectionStats()
-      : null;
+    const dbHealth = await this.healthService.checkDatabase();
+    const stats = dbHealth ? await this.healthService.getDatabaseStats() : null;
 
     return {
       status: dbHealth ? 'up' : 'down',

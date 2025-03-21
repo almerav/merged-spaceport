@@ -23,8 +23,8 @@ export class AuthService {
     const findUser = fakeUsers.find((user) => user.username === username);
     if (!findUser) return null;
     if (password === findUser.password) {
-      const { password, ...user } = findUser;
-      return this.jwtService.sign(user);
+      const { id, username: userName } = findUser;
+      return this.jwtService.sign({ id, username: userName });
     }
   }
 }

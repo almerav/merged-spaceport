@@ -2,7 +2,6 @@ import { defineConfig, Options } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Logger } from '@nestjs/common';
 import * as path from 'path';
-import { EventArgs } from '@mikro-orm/core';
 
 const logger = new Logger('MikroORM');
 
@@ -256,12 +255,51 @@ export const configureDatabaseEventListeners = (orm: any): void => {
 };
 
 /**
- * Retry configuration for database connection
- * These values are used in the application bootstrap process
+ * Get connection retry configuration for database connections
  */
 export const getConnectionRetryConfig = () => {
   return {
-    maxRetries: isProduction ? 5 : 3,
-    retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY || '2000', 10), // 2 seconds
+    maxRetries: parseInt(process.env.DATABASE_MAX_RETRIES || '5', 10),
+    retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY || '5000', 10),
   };
+};
+
+/**
+ * Verify database connection with retry logic
+ * @param em Entity manager instance
+ * @param logger Optional logger instance
+ */
+export const verifyConnection = async (
+  orm: any,
+  logger?: any,
+): Promise<boolean> => {
+  const log = logger || new Logger('MikroORM');
+  let isConnected = false;
+  let retries = 0;
+  const retryConfig = getConnectionRetryConfig();
+  const maxRetries = retryConfig.maxRetries;
+  const retryDelay = retryConfig.retryDelay;
+
+  while (!isConnected && retries < maxRetries) {
+    try {
+      await orm.em.getConnection().execute('SELECT 1');
+      isConnected = true;
+      log.log('Database connection verified successfully');
+    } catch (error) {
+      retries++;
+      if (retries >= maxRetries) {
+        log.error(
+          `Failed to connect to the database after ${maxRetries} attempts`,
+          error,
+        );
+        return false;
+      }
+      log.warn(
+        `Failed to connect to the database. Retrying (${retries}/${maxRetries}) in ${retryDelay}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+
+  return isConnected;
 };
