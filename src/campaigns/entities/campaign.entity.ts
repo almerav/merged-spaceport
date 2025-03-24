@@ -5,6 +5,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  PrimaryKey,
   Property,
 } from '@mikro-orm/core';
 import { BaseEntity } from '../../common/entities/base.entity';
@@ -32,6 +33,9 @@ export enum CampaignType {
 
 @Entity({ tableName: 'campaigns' })
 export class Campaign extends BaseEntity {
+  @PrimaryKey()
+  id!: string;
+
   @Property()
   name: string;
 
