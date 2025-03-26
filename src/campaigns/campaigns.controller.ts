@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Body, Put, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { CampaignsService } from './campaigns.service';
 import { Campaign } from './entities/campaign.entity';
 

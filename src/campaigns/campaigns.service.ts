@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Campaign } from './entities/campaign.entity';
-import { CampaignContent } from './entities/campaign-content.entity';
 
 @Injectable()
 export class CampaignsService {
@@ -17,8 +16,10 @@ export class CampaignsService {
   }
 
   async findOne(id: number) {
-    return await this.campaignRepo.findOne({ id: String(id) }, { populate: ['contents', 'tags'] });
-
+    return await this.campaignRepo.findOne(
+      { id: String(id) },
+      { populate: ['contents', 'tags'] },
+    );
   }
 
   async create(data: Partial<Campaign>) {
@@ -38,5 +39,5 @@ export class CampaignsService {
 
   async delete(id: number) {
     await this.campaignRepo.nativeDelete({ id: String(id) });
-}
+  }
 }
