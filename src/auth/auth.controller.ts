@@ -1,24 +1,20 @@
-import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalGuard } from './guards/local.guard';
-import { Request } from 'express';
+import { LoginDto } from '../users/dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @UseGuards(LocalGuard)
-  login(@Req() req: Request) {
-    return req.user;
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
-  @Get('status')
   @UseGuards(JwtAuthGuard)
-  status(@Req() req: Request) {
-    console.log('Inside AuthController status method');
-    console.log(req.user);
+  @Get('profile')
+  getProfile(@Req() req) {
     return req.user;
   }
 }

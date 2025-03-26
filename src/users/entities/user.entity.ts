@@ -36,6 +36,7 @@ export class User {
 
   @BeforeCreate()
   async hashPassword() {
+    // Hash password before creating user
     this.password = await hash(this.password, 10);
   }
 }
