@@ -1,30 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { AuthPayloadDto } from './dto/auth.dto';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-
-const fakeUsers = [
-  {
-    id: 1,
-    username: 'anson',
-    password: 'password',
-  },
-  {
-    id: 2,
-    username: 'jack',
-    password: 'password123',
-  },
-];
+import { LoginDto } from '../users/dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  validateUser({ username, password }: AuthPayloadDto) {
-    const findUser = fakeUsers.find((user) => user.username === username);
-    if (!findUser) return null;
-    if (password === findUser.password) {
-      const { id, username: userName } = findUser;
-      return this.jwtService.sign({ id, username: userName });
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+    const user = await this.usersService.validateUser(email, password);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
     }
+
+    const payload = { id: user.id, email: user.email };
+    const token = this.jwtService.sign(payload);
+
+    return {
+      accessToken: token,
+      user,
+    };
   }
 }
