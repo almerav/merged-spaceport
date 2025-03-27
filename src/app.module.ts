@@ -12,6 +12,7 @@ import { MigrationModule } from './common/services/migration.module';
 import { HealthModule } from './health/health.module';
 import mikroOrmConfig from './config/mikro-orm.config';
 import { AuthModule } from './auth/auth.module';
+import { ActiveCampaignModule } from './active-campaign/active-campaign.module';
 
 import { SentryModule } from '@sentry/nestjs/setup';
 
@@ -31,6 +32,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     MigrationModule,
     UsersModule,
     AuthModule,
+    ActiveCampaignModule,
 
     SentryModule.forRoot(),
   ],
