@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { ActiveCampaign } from './entities/active-campaign.entity';
@@ -10,13 +14,14 @@ export class ActiveCampaignService {
     @InjectRepository(ActiveCampaign)
     private readonly activeCampaignRepo: EntityRepository<ActiveCampaign>,
     private readonly em: EntityManager,
-  ) { }
+  ) {}
 
   async findAll() {
     return await this.activeCampaignRepo.findAll();
   }
 
-  async findOne(id: string) {  // Change from number to string
+  async findOne(id: string) {
+    // Change from number to string
     return await this.activeCampaignRepo.findOne({ id });
   }
 
@@ -36,16 +41,16 @@ export class ActiveCampaignService {
     }
   }
 
-
-  async update(id: string, data: Partial<ActiveCampaign>) {  // Change from number to string
+  async update(id: string, data: Partial<ActiveCampaign>) {
+    // Change from number to string
     const activeCampaign = await this.findOne(id);
-    if (!activeCampaign) throw new NotFoundException(`Campaign with ID ${id} not found`);
+    if (!activeCampaign)
+      throw new NotFoundException(`Campaign with ID ${id} not found`);
 
     this.activeCampaignRepo.assign(activeCampaign, data);
     await this.em.flush();
     return activeCampaign;
   }
-
 
   async delete(id: string): Promise<void> {
     const campaign = await this.activeCampaignRepo.findOne({ id }); // Fix findOne
@@ -54,5 +59,4 @@ export class ActiveCampaignService {
     }
     await this.em.removeAndFlush(campaign);
   }
-
 }

@@ -35,7 +35,6 @@ export class ActiveCampaign {
   @Property({ name: 'name' }) // Map it to the database column "name"
   name: string;
 
-
   @Enum(() => ActiveCampaignStatus)
   status: ActiveCampaignStatus = ActiveCampaignStatus.DRAFT;
 

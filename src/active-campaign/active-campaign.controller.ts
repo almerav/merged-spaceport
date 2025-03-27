@@ -1,11 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ActiveCampaignService } from './active-campaign.service';
 import { CreateActiveCampaignDto } from './dto/create-active-campaign.dto';
 import { UpdateActiveCampaignDto } from './dto/update-active-campaign.dto';
 
 @Controller('active-campaigns')
 export class ActiveCampaignController {
-  constructor(private readonly activeCampaignService: ActiveCampaignService) { }
+  constructor(private readonly activeCampaignService: ActiveCampaignService) {}
 
   @Get()
   findAll() {
@@ -13,7 +21,8 @@ export class ActiveCampaignController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {  // Change from number to string
+  findOne(@Param('id') id: string) {
+    // Change from number to string
     return this.activeCampaignService.findOne(id);
   }
 
@@ -23,7 +32,11 @@ export class ActiveCampaignController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateActiveCampaignDto: UpdateActiveCampaignDto) { // Change type
+  update(
+    @Param('id') id: string,
+    @Body() updateActiveCampaignDto: UpdateActiveCampaignDto,
+  ) {
+    // Change type
     return this.activeCampaignService.update(id, updateActiveCampaignDto);
   }
 

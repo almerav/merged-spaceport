@@ -1,7 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20250326064300_Migration20250326064300 extends Migration {
-
   override async up(): Promise<void> {
     this.addSql(`
       CREATE TABLE "active_campaigns" (
@@ -22,5 +21,4 @@ export class Migration20250326064300_Migration20250326064300 extends Migration {
   override async down(): Promise<void> {
     this.addSql(`DROP TABLE IF EXISTS "active_campaigns";`);
   }
-
 }
