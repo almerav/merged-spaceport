@@ -119,12 +119,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "unsigned": false,
-          "autoincrement": true,
-          "primary": true,
+          "autoincrement": false,
+          "primary": false,
           "nullable": false,
-          "mappedType": "integer"
+          "default": "gen_random_uuid()",
+          "mappedType": "uuid"
         },
         "email": {
           "name": "email",
@@ -136,8 +137,8 @@
           "length": 255,
           "mappedType": "string"
         },
-        "first_name": {
-          "name": "first_name",
+        "firstname": {
+          "name": "firstname",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -146,8 +147,8 @@
           "length": 255,
           "mappedType": "string"
         },
-        "last_name": {
-          "name": "last_name",
+        "lastname": {
+          "name": "lastname",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -166,17 +167,6 @@
           "length": 255,
           "mappedType": "string"
         },
-        "role": {
-          "name": "role",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "default": "'user'",
-          "mappedType": "string"
-        },
         "avatar": {
           "name": "avatar",
           "type": "varchar(255)",
@@ -187,13 +177,23 @@
           "length": 255,
           "mappedType": "string"
         },
-        "created_at": {
-          "name": "created_at",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamptz",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
           "length": 6,
           "mappedType": "datetime"
         }
@@ -207,6 +207,16 @@
           ],
           "composite": false,
           "keyName": "users_email_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "users_email_unique",
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
           "constraint": true,
           "primary": false,
           "unique": true
@@ -365,12 +375,12 @@
         },
         "owner_id": {
           "name": "owner_id",
-          "type": "int",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "integer"
+          "mappedType": "uuid"
         }
       },
       "name": "campaigns",
