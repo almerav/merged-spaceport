@@ -16,10 +16,10 @@ export class User {
   @Unique()
   email!: string;
 
-  @Property({ fieldName: 'firstname' }) 
+  @Property({ fieldName: 'firstname' })
   firstName!: string;
 
-  @Property({ fieldName: 'lastname' }) 
+  @Property({ fieldName: 'lastname' })
   lastName!: string;
 
   @Property({ hidden: true })
@@ -31,7 +31,11 @@ export class User {
   @Property({ fieldName: 'createdat', onCreate: () => new Date() })
   createdAt!: Date;
 
-  @Property({ fieldName: 'updated_at', onUpdate: () => new Date(), nullable: true })
+  @Property({
+    fieldName: 'updated_at',
+    onUpdate: () => new Date(),
+    nullable: true,
+  })
   updatedAt?: Date;
 
   @BeforeCreate()
