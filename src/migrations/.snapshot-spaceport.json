@@ -82,12 +82,11 @@
           "primary": false,
           "nullable": false,
           "enumItems": [
-            "email",
-            "social",
-            "display",
-            "sms",
-            "push",
-            "other"
+            "marketing",
+            "advertising",
+            "event_promotion",
+            "sales",
+            "advocacy"
           ],
           "mappedType": "enum"
         },
@@ -120,6 +119,44 @@
           "nullable": false,
           "default": "0",
           "mappedType": "integer"
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "video_url": {
+          "name": "video_url",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "platform": {
+          "name": "platform",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "facebook",
+            "twitter",
+            "instagram",
+            "linkedin",
+            "youtube",
+            "tiktok",
+            "other"
+          ],
+          "mappedType": "enum"
         }
       },
       "name": "active_campaigns",

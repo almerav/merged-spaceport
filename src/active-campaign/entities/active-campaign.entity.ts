@@ -10,11 +10,20 @@ export enum ActiveCampaignStatus {
 }
 
 export enum ActiveCampaignType {
-  EMAIL = 'email',
-  SOCIAL = 'social',
-  DISPLAY = 'display',
-  SMS = 'sms',
-  PUSH = 'push',
+  MARKETING = 'marketing',
+  ADVERTISING = 'advertising',
+  EVENT_PROMOTION = 'event_promotion',
+  SALES = 'sales',
+  ADVOCACY = 'advocacy',
+}
+
+export enum Platform {
+  FACEBOOK = 'facebook',
+  TWITTER = 'twitter',
+  INSTAGRAM = 'instagram',
+  LINKEDIN = 'linkedin',
+  YOUTUBE = 'youtube',
+  TIKTOK = 'tiktok',
   OTHER = 'other',
 }
 
@@ -49,4 +58,14 @@ export class ActiveCampaign {
 
   @Property({ default: 0 })
   budget: number = 0;
+
+  @Property({ nullable: true })
+  imageUrl?: string;  // URL for the campaign's image
+
+  @Property({ nullable: true })
+  videoUrl?: string;  // URL for the campaign's video
+
+  @Enum(() => Platform)
+  @Property({ nullable: true })
+  platform?: Platform;  // Platform for the campaign (e.g., Facebook, Twitter, etc.)
 }
